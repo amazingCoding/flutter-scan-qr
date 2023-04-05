@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="io.xdag.plugin.scan_qr">
+
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <application>
+        <activity
+            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:name=".ScanActivity"
+            android:exported="false" />
+    </application>
+
+</manifest>
