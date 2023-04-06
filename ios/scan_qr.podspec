@@ -16,7 +16,7 @@ A new Flutter plugin project.
   s.source_files = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
-  s.platform = :ios, '12.4'
+  s.platform = :ios, '12.0'
   s.resource_bundles = {
     'LightWebCore' => ['Assets/*.xcassets']
   }
