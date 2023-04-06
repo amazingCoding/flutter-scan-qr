@@ -1,8 +1,6 @@
 package io.xdag.plugin.scan_qr;
 
-import androidx.activity.result.ActivityResultCallback;
-import androidx.activity.result.PickVisualMediaRequest;
-import androidx.activity.result.contract.ActivityResultContract;
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,7 +24,6 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.media.Image;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Vibrator;
@@ -51,7 +48,6 @@ import com.google.mlkit.vision.barcode.common.Barcode;
 import com.google.mlkit.vision.common.InputImage;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -109,66 +105,14 @@ public class ScanActivity extends AppCompatActivity {
             imageProxy.close();
         }
     }
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_scan);
 
-        //全屏
-        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS | WindowManager.LayoutParams.FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
-        getWindow().setStatusBarColor(Color.TRANSPARENT);
-        getWindow().setNavigationBarColor(Color.BLACK);
+    private ActivityResultLauncher<Intent> mGetContent = registerForActivityResult(
+        new ActivityResultContracts.StartActivityForResult(),
+        result -> {
+            int resultCode = result.getResultCode();
 
-        // UI
-        LinearLayout closeBtn = findViewById(R.id.cloesBtn);
-        LinearLayout imageBtn = findViewById(R.id.imageBtn);
-        int dp20 = dp2px(20);
-        int dp36 = dp2px(36);
-        setView();
-        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(dp36,dp36);
-        layoutParams.setMargins(dp20,dp20 + getStatusBarHeightCompat(),0,0);
-        closeBtn.setLayoutParams(layoutParams);
-        closeBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setResult(RESULT_CANCELED);
-                finish();
-            }
-        });
-        imageBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(Intent.ACTION_PICK);
-                intent.setType("image/*");
-                startActivityForResult(intent, 1);
-
-            }
-        });
-        // 检测 权限
-        checkPermissionAndCamera();
-    }
-    @Override
-    public void finish() {
-        super.finish();
-        overridePendingTransition(R.anim.normal_bottom,R.anim.pop_bootom);
-    }
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if(scanLine != null) scanLine.animate().cancel();
-        if(scanner != null) scanner.close();
-        if(scannerImage != null) scannerImage.close();
-        if(cameraExecutor != null) cameraExecutor.shutdown();
-    }
-
-    Context context = this;
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == 1){
             if(resultCode == RESULT_OK){
+                Intent data = result.getData();
                 if(data != null){
                     Uri uri = data.getData();
                     InputImage image;
@@ -229,7 +173,61 @@ public class ScanActivity extends AppCompatActivity {
                 }
             }
         }
+    );
 
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_scan);
+
+        //全屏
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS | WindowManager.LayoutParams.FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
+        getWindow().setStatusBarColor(Color.TRANSPARENT);
+        getWindow().setNavigationBarColor(Color.BLACK);
+
+        // UI
+        LinearLayout closeBtn = findViewById(R.id.cloesBtn);
+        LinearLayout imageBtn = findViewById(R.id.imageBtn);
+        int dp20 = dp2px(20);
+        int dp36 = dp2px(36);
+        setView();
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(dp36,dp36);
+        layoutParams.setMargins(dp20,dp20 + getStatusBarHeightCompat(),0,0);
+        closeBtn.setLayoutParams(layoutParams);
+        closeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setResult(RESULT_CANCELED);
+                finish();
+            }
+        });
+        imageBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(Intent.ACTION_PICK);
+                intent.setType("image/*");
+//                startActivityForResult(intent, 1);
+                mGetContent.launch(intent);
+
+            }
+        });
+        // 检测 权限
+        checkPermissionAndCamera();
+    }
+    @Override
+    public void finish() {
+        super.finish();
+        overridePendingTransition(R.anim.normal_bottom,R.anim.pop_bootom);
+    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(scanLine != null) scanLine.animate().cancel();
+        if(scanner != null) scanner.close();
+        if(scannerImage != null) scannerImage.close();
+        if(cameraExecutor != null) cameraExecutor.shutdown();
     }
 
     // 逻辑
